@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
-print('Starting')
+print('Starting...')
 
 #url to be scraped
 url = 'https://old.reddit.com/r/GameDeals/'
