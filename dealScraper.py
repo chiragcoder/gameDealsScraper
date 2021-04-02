@@ -5,6 +5,7 @@ import re
 import time
 import datetime
 import smtplib
+import traceback
 
 senderId = ''
 senderPass = ''
@@ -55,41 +56,52 @@ while True:
 		#gets the response
 		response = requests.get(url, headers=headers)
 
-		soup = BeautifulSoup(response.content, "html.parser")
+		soup = BeautifulSoup(response.text, "html.parser")
 
-		#get all the deals in the page
-		deals = soup.find_all('a', attrs={'class': 'title may-blank outbound'})
+		#get all the deals in the page.
+		#All the 'a' elements containing "title may-blank".
+		deals = soup.find_all('a', re.compile("title may-blank"))
 
 		for deal in deals:
 
-			#Remove [] from store string
-			store = deal.text.split(']')[0].strip('[')
-			title = deal.text.split(']')[1]
-			
-			#Find all numbers in the title which are followed by %
-			discounts = re.findall(r'\d+%', title)
+			try:
 
-			isBigDiscount = False
+				#Remove [] from store string
+				store = deal.text.split(']')[0].strip('[')
+				title = deal.text.split(']')[1]
 
-			for discount in discounts:
-				#remove the %
-				discountFloat = float(discount.strip('%'))
-				if(discountFloat >= discountThreshold):
-					isBigDiscount = True
-					break
-			
-			#Span contains whether deal expired or not
-			span = deal.parent.find('span').text
-			status = 'Expired' if span == 'Expired' else 'Active'
-			
-			finalText = store + '\n' + title.strip() + '\n' + deal['href'] + '\n\n'
-			
-			#Get the deal if big discount and not expired, and deal not already sent
-			if(status!='Expired' and isBigDiscount and finalText not in sentSet):
-				sentSet.add(finalText)
-				mailContent = mailContent + finalText
-				print(finalText)
+				#Find all numbers in the title which are followed by %
+				discounts = re.findall(r'\d+%', title)
+
+				isBigDiscount = False
+
+				for discount in discounts:
+					#remove the %
+					discountFloat = float(discount.strip('%'))
+					if(discountFloat >= discountThreshold):
+						isBigDiscount = True
+						break
 				
+				#TODO Active or Expired
+
+				href = deal.get('href')
+
+				#IF direct link not mentioned
+				if('/r/GameDeals' in deal.get('href')):
+					href = 'https://www.reddit.com' + href
+
+				finalText = store + '\n' + title.strip() + '\n' + href + '\n\n'
+				
+
+				#Get the deal if big discount, and deal not already sent
+				if(isBigDiscount and finalText not in sentSet):
+					sentSet.add(finalText)
+					mailContent = mailContent + finalText
+					print(finalText)
+
+			except Exception as e:
+				traceback.print_exc()
+				print(deal.text,'\n\n')
 
 		if(mailContent!=''):
 			print("Sending mail...")
@@ -97,7 +109,7 @@ while True:
 			print("Mail sent")
 
 	except Exception as e:
-		print(e)
+		traceback.print_exc()
 
 	#Seconds
 	time.sleep(30 * 60)
