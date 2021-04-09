@@ -1,0 +1,11 @@
+---
+application:
+  name: "gamedealsscraper"
+  project: "Deals Hunter"
+  organization: "QoveryCommunity"
+routers:
+- name: "main-gamedealsscraper"
+  routes:
+  - application_name: "gamedealsscraper"
+    paths:
+    - "/*"
