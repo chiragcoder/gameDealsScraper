@@ -6,6 +6,7 @@ import time
 import datetime
 import smtplib
 import traceback
+import getpass
 
 senderId = ''
 senderPass = ''
@@ -32,6 +33,10 @@ def sendMail(mailBody):
     s.quit()
 
 print('Starting...')
+
+senderId = getpass.getpass('Sender email : ')
+senderPass = getpass.getpass('Sender email password : ')
+receiverID = getpass.getpass('Receiver email : ')
 
 #url to be scraped
 url = 'https://old.reddit.com/r/GameDeals/'
